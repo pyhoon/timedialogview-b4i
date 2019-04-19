@@ -1,0 +1,88 @@
+﻿Build1=Default,b4i.example.b4iviewtimedialog
+File1=1.bil
+File2=CustomDialog.bil
+FileGroup1=Default Group
+FileGroup2=Default Group
+Group=Default Group
+Library1=icore
+Library2=xui views
+NumberOfFiles=2
+NumberOfLibraries=2
+NumberOfModules=0
+Version=5.5
+@EndOfDesignText@
+'Code module
+#Region  Project Attributes 
+	#ApplicationLabel: B4iViewTimeDialog
+	#Version: 1.0.0 
+	'Orientation possible values: Portrait, LandscapeLeft, LandscapeRight and PortraitUpsideDown
+	#iPhoneOrientations: Portrait, LandscapeLeft, LandscapeRight
+	#iPadOrientations: Portrait, LandscapeLeft, LandscapeRight, PortraitUpsideDown
+	#Target: iPhone, iPad
+	#ATSEnabled: True
+	#MinVersion: 8
+#End Region
+
+Sub Process_Globals
+	Public App As Application
+	Public NavControl As NavigationController
+	Private Page1 As Page
+	Private xui As XUI	
+	Private dialog As B4XDialog
+	Private lblTime As Label
+	Private ftfHour As B4XFloatTextField
+	Private ftfMinute As B4XFloatTextField
+	Private lblColon As Label
+	Private cbAMPM As B4XComboBox
+	Dim HH As Int = 12
+	Dim MM As Int = 0
+	Dim TT As Int = 1	
+End Sub
+
+Private Sub Application_Start (Nav As NavigationController)
+	'SetDebugAutoFlushLogs(True) 'Uncomment if program crashes before all logs are printed.
+	NavControl = Nav
+	Page1.Initialize("Page1")
+	Page1.Title = "Page 1"
+	Page1.RootPanel.LoadLayout("1")	
+	NavControl.ShowPage(Page1)
+	dialog.Initialize(Page1.RootPanel)
+	dialog.Title = "B4iViewTimeDialog"
+End Sub
+
+Private Sub Page1_Resize(Width As Int, Height As Int)
+	If dialog.Visible Then dialog.Resize(Width, Height)
+End Sub
+
+Private Sub Application_Background
+	dialog.Close(xui.DialogResponse_Cancel)
+End Sub
+
+Sub lblTime_Click
+	Dim p As B4XView = xui.CreatePanel("")
+	p.SetLayoutAnimated(0, 0, 0, 100%x-40dip, 150dip)
+	p.LoadLayout("CustomDialog")
+	ftfHour.TextField.EditTextHint = "12"
+	ftfMinute.TextField.EditTextHint = "00"
+	cbAMPM.SetItems(Array As String("AM", "PM"))
+	cbAMPM.SelectedIndex = TT
+	dialog.PutAtTop = True 'put the dialog at the top of the screen
+	dialog.BackgroundColor = Colors.ARGB(200, 125, 125, 125)
+	dialog.ButtonsColor = Colors.RGB(125, 125, 125)
+	If HH < 10 Then ftfHour.Text = "0" & HH Else ftfHour.Text = HH
+	If MM < 10 Then ftfMinute.Text = "0" & MM Else ftfMinute.Text = MM
+	Wait For (dialog.ShowCustom(p, "OK", "", "CANCEL")) Complete (Result As Int)
+	ftfHour.TextField.RequestFocus
+	If Result = xui.DialogResponse_Positive Then
+		If ftfHour.Text = "" Or ftfHour.Text = "0" Or ftfHour.Text = "00" Then HH = 12 Else HH = ftfHour.Text
+		If ftfMinute.Text = "" Then MM = 0 Else MM = ftfMinute.Text
+		If HH > 12 Then HH = 12
+		If MM > 59 Then MM = 0
+		If HH < 10 Then ftfHour.Text = "0" & HH Else ftfHour.Text = HH
+		If MM < 10 Then ftfMinute.Text = "0" & MM Else ftfMinute.Text = MM
+		TT = cbAMPM.SelectedIndex
+		Dim strValue As String = ftfHour.Text & ":" & ftfMinute.Text & " " & cbAMPM.GetItem(cbAMPM.SelectedIndex)
+		'dialog.Show(strValue, "OK", "", "")
+		lblTime.Text = strValue
+	End If
+End Sub
